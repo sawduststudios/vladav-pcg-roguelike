@@ -6,7 +6,9 @@ import cz.cuni.gamedev.nail123.roguelike.entities.unplacable.FogOfWar
 import cz.cuni.gamedev.nail123.roguelike.events.logMessage
 import cz.cuni.gamedev.nail123.roguelike.world.Area
 import cz.cuni.gamedev.nail123.roguelike.world.World
+import cz.cuni.gamedev.nail123.roguelike.world.builders.AreaBuilder
 import cz.cuni.gamedev.nail123.roguelike.world.builders.EmptyAreaBuilder
+import cz.cuni.gamedev.nail123.roguelike.world.builders.VladAreaBuilder
 import org.hexworks.zircon.api.data.Position3D
 import org.hexworks.zircon.api.data.Size3D
 
@@ -24,7 +26,8 @@ class SampleWorld: World() {
      */
     fun buildLevel(): Area {
         // Start with an empty area
-        val areaBuilder = EmptyAreaBuilder().create()
+        //val areaBuilder = EmptyAreaBuilder().create()
+        val areaBuilder = VladAreaBuilder().create()
 
         // Place the player at an empty location in the top-left quarter
         areaBuilder.addAtEmptyPosition(
