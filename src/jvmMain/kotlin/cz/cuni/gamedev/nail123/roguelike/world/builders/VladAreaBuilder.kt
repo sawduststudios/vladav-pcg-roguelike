@@ -11,12 +11,14 @@ import kotlin.random.Random
 
 class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                        visibleSize: Size3D = GameConfig.VISIBLE_SIZE): AreaBuilder(size, visibleSize) {
-
+    val random: Random = Random(4)
     open class Room(
         protected var leftR: Int,
         protected var rightR: Int,
         protected var topR: Int,
-        protected var bottomR: Int
+        protected var bottomR: Int,
+        protected var blocks : ObservableMap<Position3D, GameBlock>,
+        protected val random: Random
     ) {
         protected fun getWidth(): Int {
             return rightR - leftR + 1
@@ -36,7 +38,8 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
         fun getBottom(): Int {
             return bottomR
         }
-        open fun draw(blocks: ObservableMap<Position3D, GameBlock>){
+        open fun draw(){
+            println("-----DRAWING ROOM")
             val width = getWidth()
             val height = getHeight()
             for (x in 0 until width) {
@@ -51,8 +54,10 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
         left: Int,
         right: Int,
         top: Int,
-        bottom: Int
-    ) : Room(left, right, top, bottom) {
+        bottom: Int,
+        blocks: ObservableMap<Position3D, GameBlock>,
+        random: Random
+    ) : Room(left, right, top, bottom, blocks, random) {
 
         private var horizontalSplit: Boolean = false
         private var verticalSplit: Boolean = false
@@ -63,7 +68,7 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
         init {
             if (getHeight() < MIN_HEIGHT || getWidth() < MIN_WIDTH) {
-                println("Error: Small room: " + getWidth() + "x" + getHeight())
+                println("Warning: Small room: " + getWidth() + "x" + getHeight())
             }
         }
 
@@ -75,8 +80,10 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
             return !horizontalSplit && !verticalSplit
         }
         fun split() {
+            if (horizontalSplit || verticalSplit)
+                return
             // Attempt random split
-            val rand = Math.random()
+            val rand = random.nextFloat()
             if (rand < 0.5 && getWidth() >= 2 * MIN_WIDTH) {
                 verticalSplit()
                 return
@@ -90,20 +97,19 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                 verticalSplit()
                 return
             }
-
             if (getHeight() > MAX_HEIGHT) {
                 horizontalSplit()
                 return
             }
         }
-        override fun draw(blocks: ObservableMap<Position3D, GameBlock>) {
+        override fun draw() {
             var isLeaf = isLeaf()
             trim()
             if (isLeaf) {
-                super.draw(blocks)
+                super.draw()
             } else {
-                leftRoom?.draw(blocks)
-                rightRoom?.draw(blocks)
+                leftRoom?.draw()
+                rightRoom?.draw()
             }
         }
         private fun verticalSplit() {
@@ -114,13 +120,13 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
             val maxSplit = rightR - MIN_WIDTH
             val splitRange = maxSplit - minSplit
             val splitX = if (splitRange > 0) {
-                minSplit + (Math.random() * splitRange).toInt()
+                minSplit + (random.nextFloat() * splitRange).toInt()
             } else {
                 (leftR + rightR) / 2
             }
 
-            leftRoom = BinaryRoom(leftR, splitX, topR, bottomR)
-            rightRoom = BinaryRoom(splitX + 1, rightR, topR, bottomR)
+            leftRoom = BinaryRoom(leftR, splitX, topR, bottomR, blocks, random)
+            rightRoom = BinaryRoom(splitX + 1, rightR, topR, bottomR, blocks, random)
         }
 
         private fun horizontalSplit() {
@@ -131,13 +137,13 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
             val maxSplit = bottomR - MIN_HEIGHT
             val splitRange = maxSplit - minSplit
             val splitY = if (splitRange > 0) {
-                minSplit + (Math.random() * splitRange).toInt()
+                minSplit + (random.nextFloat() * splitRange).toInt()
             } else {
                 (topR + bottomR) / 2
             }
 
-            leftRoom = BinaryRoom(leftR, rightR, topR, splitY)
-            rightRoom = BinaryRoom(leftR, rightR, splitY + 1, bottomR)
+            leftRoom = BinaryRoom(leftR, rightR, topR, splitY, blocks, random)
+            rightRoom = BinaryRoom(leftR, rightR, splitY + 1, bottomR, blocks, random)
         }
 
         fun trim() {
@@ -145,8 +151,8 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                 return
             trimmed = true
 
-            val horizontalTrim = Random.nextInt(MIN_TRIM, MAX_TRIM + 1)
-            val verticalTrim = Random.nextInt(MIN_TRIM, MAX_TRIM + 1)
+            val horizontalTrim = random.nextInt(MIN_TRIM, MAX_TRIM + 1)
+            val verticalTrim = random.nextInt(MIN_TRIM, MAX_TRIM + 1)
 
             leftR += horizontalTrim
             rightR -= horizontalTrim
@@ -161,7 +167,7 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                 rightRoom?.let { connections.addAll(it.getTopConnections()) }
                 leftRoom?.let { connections.addAll(it.getTopConnections()) }
             } else {
-                for (x in leftR + CORRIDOR_MARGIN..rightR - CORRIDOR_MARGIN) {
+                for (x in leftR + CORRIDOR_MARGIN + 1..rightR - CORRIDOR_MARGIN - 1) {
                     connections.add(x)
                 }
             }
@@ -212,9 +218,8 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
             return connections
         }
-
         fun getIntersectionGroups(points: List<Int>): List<Pair<Int, Int>> {
-            val groups = mutableListOf<Pair<Int, Int>>()
+            var groups = mutableListOf<Pair<Int, Int>>()
 
             var firstTime = true
             var currentGroup = Pair(0, 0)
@@ -237,8 +242,79 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                 groups.add(currentGroup)
             }
 
-            return groups.filter { it.second - it.first >= MIN_CORRIDOR_THICKNESS }
+            groups = groups.filter { it.second - it.first >= MIN_CORRIDOR_THICKNESS }.toMutableList()
+            // sometimes the groups are longer than MAX_CORRIDOR_THICKNESS
+            // if they are, replace it with a randomly chosen sub group of MAX_CORRIDOR_THICKNESS
+            val updatedGroups = mutableListOf<Pair<Int, Int>>()
+            for (group in groups) {
+                if (group.second - group.first + 1 > MAX_CORRIDOR_THICKNESS) {
+                    val start = group.first
+                    val end = group.second
+                    val rangeSize = end - start + 1
+
+                    val maxStart = end - MAX_CORRIDOR_THICKNESS + 1
+                    val randomStart = if (rangeSize > MAX_CORRIDOR_THICKNESS) {
+                        random.nextInt(start, maxStart + 1)
+                    } else {
+                        start
+                    }
+                    val randomEnd = randomStart + MAX_CORRIDOR_THICKNESS - 1
+                    updatedGroups.add(Pair(randomStart, randomEnd))
+                } else {
+                    updatedGroups.add(group)
+                }
+            }
+
+            return updatedGroups
         }
+
+        fun addCorridors() {
+            if (isLeaf())
+                return
+
+            // TODO: check if no corridor exists and try again
+
+            if (leftRoom != null && rightRoom != null) {
+                if (verticalSplit) {
+                    val positions = leftRoom!!.getRightConnections().intersect(rightRoom!!.getLeftConnections()).toList()
+                    val groups = getIntersectionGroups(positions)
+                    val p = groups.random()
+                    drawCorridor(leftRoom!!.rightR, p.first,rightRoom!!.leftR, p.second, false)
+                } else {
+                    val positions = leftRoom!!.getBottomConnections().intersect(rightRoom!!.getTopConnections()).toList()
+                    val groups = getIntersectionGroups(positions)
+                    val p = groups.random()
+                    drawCorridor(p.first, leftRoom!!.bottomR, p.second, rightRoom!!.topR,true)
+                }
+            }
+
+            leftRoom?.addCorridors()
+            rightRoom?.addCorridors()
+        }
+        fun drawCorridor(left: Int, top: Int, right: Int, bottom: Int, vertical: Boolean) {
+            if (vertical) {
+                // draw the left and right wall, everything else is floor
+                for (y in top..bottom) {
+                    for (x in left..right) {
+                        val isWall = x == left || x == right
+                        blocks[Position3D.create(x, y, 0)] = if (isWall) Wall() else Floor()
+                    }
+                }
+                println("DRAWING VERTICAL CORRIDOR: " + left + "," + top + "," + right + "," + bottom)
+            } else {
+                // draw the top and bottom wall, everything else is floor
+                for (x in left..right) {
+                    for (y in top..bottom) {
+                        val isWall = y == bottom || y == top
+                        blocks[Position3D.create(x, y, 0)] = if (isWall) Wall() else Floor()
+                    }
+                }
+                println("DRAWING HORIZONTAL CORRIDOR: " + left + "," + top + "," + right + "," + bottom)
+            }
+
+        }
+
+
 
         companion object {
             private const val MIN_WIDTH = 10
@@ -246,10 +322,11 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
             private const val MIN_HEIGHT = 10
             private const val MAX_HEIGHT = 22
 
-            private const val MIN_TRIM = 1
+            private const val MIN_TRIM = 2
             private const val MAX_TRIM = 2
             private const val CORRIDOR_MARGIN = 1
             private const val MIN_CORRIDOR_THICKNESS = 2
+            private const val MAX_CORRIDOR_THICKNESS = 4
         }
     }
 
@@ -257,11 +334,12 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
     override fun create(): AreaBuilder {
         // create a binary room with width 62 and height 42
-        val binaryRoom = BinaryRoom(0, 61, 0, 41)
+        val binaryRoom = BinaryRoom(0, 61, 0, 41, blocks, random)
         // split the room
         //binaryRoom.split()
         // call its draw method and pass in blocks
-        binaryRoom.draw(blocks)
+        binaryRoom.draw()
+        binaryRoom.addCorridors()
 
         return this
     }
