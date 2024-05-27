@@ -13,6 +13,7 @@ class EmptyAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                        visibleSize: Size3D = GameConfig.VISIBLE_SIZE): AreaBuilder(size, visibleSize) {
 
     override fun create(): AreaBuilder {
+        //println("width: " + width + " height: " + height) // 62 x 42
         for (x in 0 until width) {
             for (y in 0 until height) {
                 val isBorder = x == 0 || x == width - 1 || y == 0 || y == height - 1
