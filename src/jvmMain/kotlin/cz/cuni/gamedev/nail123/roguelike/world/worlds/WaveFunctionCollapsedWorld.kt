@@ -10,7 +10,7 @@ import org.hexworks.zircon.api.data.Position3D
 
 class WaveFunctionCollapsedWorld: DungeonWorld() {
     override fun buildLevel(floor: Int): Area {
-        val area = WFCAreaBuilder(GameConfig.AREA_SIZE).create()
+        val area = WFCAreaBuilder(GameConfig.AREA_SIZE).create(currentLevel)
 
         area.addAtEmptyPosition(
             area.player,

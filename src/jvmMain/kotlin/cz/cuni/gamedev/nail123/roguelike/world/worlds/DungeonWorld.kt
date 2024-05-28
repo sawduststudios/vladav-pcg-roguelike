@@ -19,7 +19,7 @@ open class DungeonWorld: World() {
     override fun buildStartingArea() = buildLevel(0)
 
     open fun buildLevel(floor: Int): Area {
-        val area = CellularAutomataAreaBuilder(GameConfig.AREA_SIZE).create()
+        val area = CellularAutomataAreaBuilder(GameConfig.AREA_SIZE).create(currentLevel)
 
         // Add stairs up
         if (floor > 0) area.addEntity(Stairs(false), area.player.position)

@@ -12,7 +12,7 @@ import org.hexworks.zircon.api.data.Size3D
 class CellularAutomataAreaBuilder(size: Size3D, visibleSize: Size3D = GameConfig.VISIBLE_SIZE)
     : AreaBuilder(size, visibleSize) {
 
-    override fun create(): AreaBuilder = apply {
+    override fun create(level: Int): AreaBuilder = apply {
         randomizeTiles()
         smoothen(8)
         addPlayer()

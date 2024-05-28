@@ -24,7 +24,7 @@ class WFCAreaBuilder(size: Size3D, visibleSize: Size3D = GameConfig.VISIBLE_SIZE
         else -> Floor()
     }
 
-    override fun create() = apply {
+    override fun create(level: Int) = apply {
         val model = OverlappingCartesian2DModel(
             sourceArray2D,
             2,

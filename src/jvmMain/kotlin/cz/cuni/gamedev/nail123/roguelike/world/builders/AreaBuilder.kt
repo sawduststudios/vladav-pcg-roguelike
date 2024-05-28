@@ -36,5 +36,5 @@ abstract class AreaBuilder(
         }
     }
 
-    abstract fun create(): AreaBuilder
+    abstract fun create(level: Int): AreaBuilder
 }

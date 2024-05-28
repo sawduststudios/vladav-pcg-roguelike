@@ -12,7 +12,7 @@ import org.hexworks.zircon.api.data.Size3D
 class EmptyAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                        visibleSize: Size3D = GameConfig.VISIBLE_SIZE): AreaBuilder(size, visibleSize) {
 
-    override fun create(): AreaBuilder {
+    override fun create(level: Int): AreaBuilder {
         //println("width: " + width + " height: " + height) // 62 x 42
         for (x in 0 until width) {
             for (y in 0 until height) {

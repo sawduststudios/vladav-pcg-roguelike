@@ -25,7 +25,7 @@ public class SampleJavaWorld extends World {
 
     Area buildLevel() {
         // Start with an empty area
-        AreaBuilder areaBuilder = (new EmptyAreaBuilder()).create();
+        AreaBuilder areaBuilder = (new EmptyAreaBuilder()).create(currentLevel);
 
         // Place the player at an empty location in the top-left quarter
         areaBuilder.addAtEmptyPosition(

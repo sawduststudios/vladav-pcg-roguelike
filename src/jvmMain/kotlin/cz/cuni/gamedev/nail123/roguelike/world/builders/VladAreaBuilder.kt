@@ -5,13 +5,15 @@ import cz.cuni.gamedev.nail123.roguelike.blocks.Floor
 import cz.cuni.gamedev.nail123.roguelike.blocks.GameBlock
 import cz.cuni.gamedev.nail123.roguelike.blocks.Wall
 import cz.cuni.gamedev.nail123.utils.collections.ObservableMap
+import cz.cuni.gamedev.nail123.utils.collections.observableMapOf
 import org.hexworks.zircon.api.data.Position3D
 import org.hexworks.zircon.api.data.Size3D
 import kotlin.random.Random
 
 class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                        visibleSize: Size3D = GameConfig.VISIBLE_SIZE): AreaBuilder(size, visibleSize) {
-    val random: Random = Random(4)
+    val seed: Int = 69
+    var random: Random = Random(69)
     open class Room(
         protected var leftR: Int,
         protected var rightR: Int,
@@ -268,9 +270,9 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
             return updatedGroups
         }
 
-        fun addCorridors() {
+        fun addCorridors(): Boolean {
             if (isLeaf())
-                return
+                return true
 
             // TODO: check if no corridor exists and try again
 
@@ -278,18 +280,23 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                 if (verticalSplit) {
                     val positions = leftRoom!!.getRightConnections().intersect(rightRoom!!.getLeftConnections()).toList()
                     val groups = getIntersectionGroups(positions)
-                    val p = groups.random()
+                    if (groups.isEmpty())
+                        return false
+                    val p = groups.random(random)
                     drawCorridor(leftRoom!!.rightR, p.first,rightRoom!!.leftR, p.second, false)
                 } else {
                     val positions = leftRoom!!.getBottomConnections().intersect(rightRoom!!.getTopConnections()).toList()
                     val groups = getIntersectionGroups(positions)
-                    val p = groups.random()
+                    if (groups.isEmpty())
+                        return false
+                    val p = groups.random(random)
                     drawCorridor(p.first, leftRoom!!.bottomR, p.second, rightRoom!!.topR,true)
                 }
             }
 
-            leftRoom?.addCorridors()
-            rightRoom?.addCorridors()
+            var succesLeft: Boolean = leftRoom?.addCorridors() == true
+            var successRight: Boolean = rightRoom?.addCorridors() == true
+            return succesLeft && successRight
         }
         fun drawCorridor(left: Int, top: Int, right: Int, bottom: Int, vertical: Boolean) {
             if (vertical) {
@@ -314,8 +321,6 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
         }
 
-
-
         companion object {
             private const val MIN_WIDTH = 10
             private const val MAX_WIDTH = 22
@@ -332,14 +337,26 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
 
 
-    override fun create(): AreaBuilder {
-        // create a binary room with width 62 and height 42
-        val binaryRoom = BinaryRoom(0, 61, 0, 41, blocks, random)
-        // split the room
-        //binaryRoom.split()
-        // call its draw method and pass in blocks
-        binaryRoom.draw()
-        binaryRoom.addCorridors()
+    override fun create(level: Int): AreaBuilder {
+        // set seed
+        random = Random(seed + level)
+
+        var success: Boolean = false
+        var tries: Int = 0
+        while (!success)
+        {
+            println("***Attempting to generate level")
+            tries++;
+            blocks = observableMapOf<Position3D, GameBlock>(Position3D.unknown() to Floor())
+            // create a binary room with width 62 and height 42
+            val binaryRoom = BinaryRoom(0, 61, 0, 41, blocks, random)
+            // split the room
+            //binaryRoom.split()
+            // call its draw method and pass in blocks
+            binaryRoom.draw()
+            success = binaryRoom.addCorridors()
+        }
+        println("***Level generated on " + tries + " attempt.")
 
         return this
     }

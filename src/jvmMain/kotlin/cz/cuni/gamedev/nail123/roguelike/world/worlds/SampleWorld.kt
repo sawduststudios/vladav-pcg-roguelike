@@ -27,7 +27,7 @@ class SampleWorld: World() {
     fun buildLevel(): Area {
         // Start with an empty area
         //val areaBuilder = EmptyAreaBuilder().create()
-        val areaBuilder = VladAreaBuilder().create()
+        val areaBuilder = VladAreaBuilder().create(currentLevel)
 
         // Place the player at an empty location in the top-left quarter
         areaBuilder.addAtEmptyPosition(

@@ -23,7 +23,7 @@ public class WaveFunctionCollapsedJavaWorld extends DungeonWorld {
                 GameConfig.WINDOW_HEIGHT - GameConfig.LOG_AREA_HEIGHT, 1
         );
 
-        AreaBuilder area = (new WFCAreaBuilder(areaSize, areaSize)).create();
+        AreaBuilder area = (new WFCAreaBuilder(areaSize, areaSize)).create(getCurrentLevel());
 
         area.addAtEmptyPosition(
                 area.getPlayer(),
