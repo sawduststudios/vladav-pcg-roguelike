@@ -30,7 +30,7 @@ class SampleWorld: World() {
         val areaBuilder = VladAreaBuilder().create(currentLevel)
 
         // Place the player at an empty location in the top-left quarter
-        areaBuilder.addAtEmptyPosition(
+        /*areaBuilder.addAtEmptyPosition(
                 areaBuilder.player,
                 Position3D.create(1, 1, 0),
                 Size3D.create(areaBuilder.width / 2 - 2, areaBuilder.height / 2 - 2, 1)
@@ -40,7 +40,7 @@ class SampleWorld: World() {
                 Stairs(),
                 Position3D.create(areaBuilder.width / 2, areaBuilder.height / 2, 0),
                 Size3D.create(areaBuilder.width / 2 - 2, areaBuilder.height / 2 - 2, 1)
-        )
+        )*/
 
         // Add some rats to each level
         repeat(currentLevel + 1) {

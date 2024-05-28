@@ -4,6 +4,9 @@ import cz.cuni.gamedev.nail123.roguelike.GameConfig
 import cz.cuni.gamedev.nail123.roguelike.blocks.Floor
 import cz.cuni.gamedev.nail123.roguelike.blocks.GameBlock
 import cz.cuni.gamedev.nail123.roguelike.blocks.Wall
+import cz.cuni.gamedev.nail123.roguelike.entities.GameEntity
+import cz.cuni.gamedev.nail123.roguelike.entities.objects.Stairs
+import cz.cuni.gamedev.nail123.roguelike.extensions.allPositionsShuffled
 import cz.cuni.gamedev.nail123.utils.collections.ObservableMap
 import cz.cuni.gamedev.nail123.utils.collections.observableMapOf
 import org.hexworks.zircon.api.data.Position3D
@@ -40,6 +43,7 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
         fun getBottom(): Int {
             return bottomR
         }
+
         open fun draw(){
             println("-----DRAWING ROOM")
             val width = getWidth()
@@ -50,6 +54,28 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                     blocks[Position3D.create(x + leftR, y + topR, 0)] = if (isBorder) Wall() else Floor()
                 }
             }
+        }
+
+        fun addAtEmptyPosition(entity: GameEntity): Boolean {
+            val width = getWidth()
+            val height = getHeight()
+
+            val size = Size3D.create(width, height, 1)
+
+            val emptyPosition = size.allPositionsShuffled()
+                .map { pos -> Position3D.create(pos.x + leftR, pos.y + topR, 0) }
+                .filter { pos -> blocks[pos]?.blocksMovement == false }
+                .firstOrNull()
+
+            return if (emptyPosition != null) {
+                addEntity(entity, emptyPosition)
+                true
+            } else {
+                false
+            }
+        }
+        private fun addEntity(entity: GameEntity, position: Position3D) {
+            (blocks[position] ?: error("Adding entity to non-existing position")).entities.add(entity)
         }
     }
     class BinaryRoom(
@@ -65,8 +91,8 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
         private var verticalSplit: Boolean = false
         private var trimmed: Boolean = false
 
-        private var leftRoom: BinaryRoom? = null
-        private var rightRoom: BinaryRoom? = null
+        var leftRoom: BinaryRoom? = null
+        var rightRoom: BinaryRoom? = null
 
         init {
             if (getHeight() < MIN_HEIGHT || getWidth() < MIN_WIDTH) {
@@ -335,7 +361,39 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
         }
     }
 
+    fun addToLeftLeaf(room: BinaryRoom, entity: GameEntity) : Boolean {
+        // Descend to a leaf node
+        if (room.isLeaf()) {
+            // If it's a leaf, place the entity
+            room.addAtEmptyPosition(entity)
+            return true
+        } else {
+            // Otherwise, recursively descend into left and right rooms if they exist
+            var leftSuccess: Boolean = room.leftRoom?.let { addToLeftLeaf(it, entity) } == true
+            if (leftSuccess)
+                return true
+            else
+                println("Error: unexpected point reached")
+                return false
+        }
+    }
 
+    fun addToRightLeaf(room: BinaryRoom, entity: GameEntity) : Boolean {
+        // Descend to a leaf node
+        if (room.isLeaf()) {
+            // If it's a leaf, place the entity
+            room.addAtEmptyPosition(entity)
+            return true
+        } else {
+            // Otherwise, recursively descend into left and right rooms if they exist
+            var rightSucccess: Boolean = room.rightRoom?.let { addToRightLeaf(it, entity) } == true
+            if (rightSucccess)
+                return true
+            else
+                println("Error: unexpected point reached")
+            return false
+        }
+    }
 
     override fun create(level: Int): AreaBuilder {
         // set seed
@@ -343,20 +401,36 @@ class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
 
         var success: Boolean = false
         var tries: Int = 0
+
+        println("***Attempting to generate level")
+        tries++
+        var root: BinaryRoom = BinaryRoom(0,61,0,41,blocks, random)
+        root.draw()
+        success = root.addCorridors()
+
         while (!success)
         {
             println("***Attempting to generate level")
-            tries++;
+            tries++
             blocks = observableMapOf<Position3D, GameBlock>(Position3D.unknown() to Floor())
             // create a binary room with width 62 and height 42
-            val binaryRoom = BinaryRoom(0, 61, 0, 41, blocks, random)
-            // split the room
-            //binaryRoom.split()
+            root = BinaryRoom(0, 61, 0, 41, blocks, random)
             // call its draw method and pass in blocks
-            binaryRoom.draw()
-            success = binaryRoom.addCorridors()
+            root.draw()
+            success = root.addCorridors()
         }
+
         println("***Level generated on " + tries + " attempt.")
+
+        if (random.nextFloat() < 0.5) {
+            addToLeftLeaf(root.leftRoom!!, player)
+            addToRightLeaf(root.rightRoom!!, Stairs())
+        }
+        else {
+            addToLeftLeaf(root.leftRoom!!, Stairs())
+            addToRightLeaf(root.rightRoom!!, player)
+        }
+
 
         return this
     }
