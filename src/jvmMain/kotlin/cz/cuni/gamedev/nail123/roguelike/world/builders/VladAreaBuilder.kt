@@ -15,8 +15,8 @@ import kotlin.random.Random
 
 class VladAreaBuilder(size: Size3D = GameConfig.AREA_SIZE,
                        visibleSize: Size3D = GameConfig.VISIBLE_SIZE): AreaBuilder(size, visibleSize) {
-    val seed: Int = 69
-    var random: Random = Random(69)
+    val seed: Int = 71
+    var random: Random = Random(71)
     open class Room(
         protected var leftR: Int,
         protected var rightR: Int,
