@@ -12,16 +12,30 @@ object Combat {
      * Meant to be expanded.
      */
     var wasCritical: Boolean = false
+    var wasParry: Boolean = false
     val rng = Random()
     fun attack(attacker: HasCombatStats, defender: HasCombatStats) {
         val critChance = 0.1
+        val parryChance = 0.1
         wasCritical = false
+        wasParry = false
         var damage = max(attacker.attack - defender.defense, 0)
         if (attacker is Player && rng.nextFloat() < critChance) {
             damage *= 2
             wasCritical = true
         }
+        if (defender is Player && rng.nextFloat() < parryChance) {
+            damage = 0
+            wasParry = true
+        }
         defender.takeDamage(damage)
+        if (defender is Player && wasParry && damage == 0) {
+            when {
+                attacker is Player -> this.logMessage("You hit $defender for $damage damage!")
+                defender is Player -> this.logMessage("PARRY! You take 0 damage!")
+                else -> this.logMessage("$attacker hits $defender for $damage damage!")
+            }
+        }
         if (!wasCritical) {
             when {
                 attacker is Player -> this.logMessage("You hit $defender for $damage damage!")
