@@ -32,16 +32,30 @@ class ShowInventory: GuiAction() {
             KeyCode.DOWN to moveDown,
             KeyCode.KEY_W to moveUp,
             KeyCode.KEY_S to moveDown,
-            KeyCode.KEY_E to ToggleEquip(0),
+            KeyCode.KEY_E to ToggleEquip(0),//ToggleEquip(0, this),
             KeyCode.KEY_D to Drop(0),
             KeyCode.KEY_I to ContextAction { deactivate() }
         ))
 
         fun cursorMoved() {
             playView.keyboardControls.config.mapping[KeyCode.KEY_D] = Drop(cursorPosition)
-            playView.keyboardControls.config.mapping[KeyCode.KEY_E] = ToggleEquip(cursorPosition)
+            playView.keyboardControls.config.mapping[KeyCode.KEY_E] = ToggleEquip(cursorPosition)//ToggleEquip(cursorPosition, this)
             playView.inventoryFragment.selectedIndex = cursorPosition
             InventoryUpdated(inventory).emit()
+        }
+
+        fun trySetValidCursor() {
+            if (inventory.items.isEmpty()) {
+                deactivate()
+                return
+            }
+
+            if (cursorPosition !in inventory.items.indices) {
+                cursorPosition = when {
+                    cursorPosition < 0 -> 0
+                    else -> inventory.items.lastIndex
+                }
+            }
         }
 
         fun activate() {

@@ -2,6 +2,7 @@ package cz.cuni.gamedev.nail123.roguelike.world.worlds
 
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Orc
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Rat
+import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Snake
 import cz.cuni.gamedev.nail123.roguelike.entities.objects.Stairs
 import cz.cuni.gamedev.nail123.roguelike.entities.unplacable.FogOfWar
 import cz.cuni.gamedev.nail123.roguelike.events.logMessage
@@ -47,11 +48,25 @@ class SampleWorld: World() {
         repeat(currentLevel + 1) {
             areaBuilder.addAtEmptyPosition(Rat(), Position3D.defaultPosition(), areaBuilder.size)
         }
+
+        var overpoweredChance = 0.7
+        var minLvlForOverpowered = 6
+        var overpowered = currentLevel >= minLvlForOverpowered && Math.random() < overpoweredChance
+
         // Add ORCS
-        // Add some orcs to each level, starting with level 2
-//        repeat(currentLevel) {
-//            areaBuilder.addAtEmptyPosition(Orc(), Position3D.defaultPosition(), areaBuilder.size)
-//        }
+        // Add some orcs to each level, starting with level 3
+        var orcSpawnChance = 0.5
+        repeat(currentLevel-1) {
+            if (Math.random() < orcSpawnChance)
+                areaBuilder.addAtEmptyPosition(Orc(overpowered), Position3D.defaultPosition(), areaBuilder.size)
+        }
+        // Add SNAKES
+        // Add some snakes to each level, starting with level 2
+        var snakeSpawnChance = 0.5
+        repeat(currentLevel) {
+            if (Math.random() < snakeSpawnChance)
+                areaBuilder.addAtEmptyPosition(Snake(overpowered), Position3D.defaultPosition(), areaBuilder.size)
+        }
 
         // We add fog of war such that exploration is needed
 //        areaBuilder.addEntity(FogOfWar(), Position3D.unknown())

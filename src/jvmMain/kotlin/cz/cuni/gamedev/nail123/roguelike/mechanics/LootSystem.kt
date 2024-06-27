@@ -3,8 +3,8 @@ package cz.cuni.gamedev.nail123.roguelike.mechanics
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Enemy
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Orc
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Rat
-import cz.cuni.gamedev.nail123.roguelike.entities.items.Item
-import cz.cuni.gamedev.nail123.roguelike.entities.items.Sword
+import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Snake
+import cz.cuni.gamedev.nail123.roguelike.entities.items.*
 import kotlin.random.Random
 
 object LootSystem {
@@ -41,21 +41,51 @@ object LootSystem {
 
 
     val rng = Random.Default
+
+    // ------------
+    // ---SWORDS---
+    // ------------
     // power 2-4
     val basicSword = SingleDrop { Sword(rng.nextInt(3) + 2)}
-    // power 5-6
-    val rareSword = SingleDrop { Sword(rng.nextInt(2) + 5)}
+    // power 6-12
+    val rareSword = SingleDrop { Sword(rng.nextInt(7) + 6)}
+
+    // -------------
+    // ---POTIONS---
+    // -------------
+    // heal 2-4
+    val basicHealthPotion = SingleDrop { HealthPotion(rng.nextInt(3) + 2)}
+    // heal 5-6
+    val rareHealthPotion = SingleDrop { HealthPotion(rng.nextInt(2) + 5)}
+
+    // --------------------
+    // ---STAT INCREASES---
+    // --------------------
+    // increase max health by 1
+    val basicMaxHealthBoost = SingleDrop { MaxHealthBoost(1) }
+    // increase max health by 2-3
+    val rareMaxHealthBoost = SingleDrop { MaxHealthBoost(rng.nextInt(2) + 2) }
+    // increse armor by 1
+    val basicMaxArmorBoost = SingleDrop { MaxArmorBoost(1) }
 
     val enemyDrops = mapOf(
         Rat::class to TreasureClass(1, listOf(
-            2 to NoDrop,
+            1 to NoDrop,
             1 to basicSword
         )),
         Orc::class to TreasureClass(1, listOf(
             4 to NoDrop,
-            2 to basicSword,
+            2 to basicMaxArmorBoost,
+            2 to basicMaxHealthBoost,
+            1 to rareMaxHealthBoost,
             1 to rareSword
-        ))
+        )),
+        Snake::class to TreasureClass(1, listOf(
+            4 to NoDrop,
+            6 to basicHealthPotion,
+            2 to rareHealthPotion,
+            1 to rareSword
+        )),
     )
 
     fun onDeath(enemy: Enemy) {

@@ -40,7 +40,15 @@ class Inventory(val player: Player) {
         if (test.success) {
             add(item)
             item.onEquip(this, player)
-            logMessage("Equipped $item")
+            if (item.consumable) {
+                logMessage(item.onConsumeMsg)
+                player.removeItem(item)
+                InventoryUpdated(player.inventory).emit()
+            }
+            else {
+                logMessage("Equipped $item")
+            }
+
         } else {
             logMessage(test.errorMessage)
         }
@@ -65,6 +73,7 @@ class Inventory(val player: Player) {
         val item = _items[slot]
         _items.removeAt(slot)
         item.onUnequip(this, player)
+        InventoryUpdated(player.inventory).emit()
         return item
     }
 }
