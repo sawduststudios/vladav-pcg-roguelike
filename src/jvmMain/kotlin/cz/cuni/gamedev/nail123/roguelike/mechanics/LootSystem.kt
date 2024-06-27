@@ -61,8 +61,8 @@ object LootSystem {
     // --------------------
     // ---STAT INCREASES---
     // --------------------
-    // increase max health by 1
-    val basicMaxHealthBoost = SingleDrop { MaxHealthBoost(1) }
+    // increase max health by 1-2
+    val basicMaxHealthBoost = SingleDrop { MaxHealthBoost(rng.nextInt(2) + 1) }
     // increase max health by 2-3
     val rareMaxHealthBoost = SingleDrop { MaxHealthBoost(rng.nextInt(2) + 2) }
     // increse armor by 1
@@ -74,17 +74,17 @@ object LootSystem {
             1 to basicSword
         )),
         Orc::class to TreasureClass(1, listOf(
-            4 to NoDrop,
-            2 to basicMaxArmorBoost,
+            1 to NoDrop,
+            3 to basicMaxArmorBoost,
             2 to basicMaxHealthBoost,
-            1 to rareMaxHealthBoost,
-            1 to rareSword
+            2 to rareMaxHealthBoost,
+            3 to rareSword
         )),
         Snake::class to TreasureClass(1, listOf(
-            4 to NoDrop,
+            3 to NoDrop,
             6 to basicHealthPotion,
             2 to rareHealthPotion,
-            1 to rareSword
+            2 to rareSword
         )),
     )
 
@@ -94,17 +94,4 @@ object LootSystem {
             enemy.area[enemy.position]?.entities?.add(item)
         }
     }
-
-
-//    val basicDrop = TreasureClass(1, listOf(
-//        2 to NoDrop,
-//        1 to basicSword
-//    ))
-//    val enemyDrops = mapOf(
-//        Rat::class to basicDrop,
-//        Orc::class to TreasureClass(1, listOf(
-//            6 to basicDrop,
-//            1 to rareSword
-//        ))
-//    )
 }

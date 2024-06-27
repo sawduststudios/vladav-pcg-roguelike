@@ -8,7 +8,6 @@ import cz.cuni.gamedev.nail123.roguelike.tiles.GameTiles
 class Orc(overPowered: Boolean): Enemy(GameTiles.ORC), HasVision {
     constructor(): this(false)
 
-    // It's up to you to decide whether you want Orcs to cast shadows
     override val blocksVision = true
     override var maxHitpoints = 15
     override var hitpoints = 15
