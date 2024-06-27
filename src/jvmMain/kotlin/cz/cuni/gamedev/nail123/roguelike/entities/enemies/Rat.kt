@@ -21,10 +21,10 @@ class Rat: Enemy(GameTiles.RAT), HasSmell {
             goBlindlyTowards(area.player.position)
         }
     }
-
-    override fun die() {
-        super.die()
-        // Drop a sword
-        this.block.entities.add(Sword(2))
-    }
+    // We do not need this since we have a loot system
+//    override fun die() {
+//        super.die()
+//        // Drop a sword
+//        this.block.entities.add(Sword(2))
+//    }
 }

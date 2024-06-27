@@ -1,5 +1,6 @@
 package cz.cuni.gamedev.nail123.roguelike.world.worlds
 
+import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Orc
 import cz.cuni.gamedev.nail123.roguelike.entities.enemies.Rat
 import cz.cuni.gamedev.nail123.roguelike.entities.objects.Stairs
 import cz.cuni.gamedev.nail123.roguelike.entities.unplacable.FogOfWar
@@ -46,6 +47,12 @@ class SampleWorld: World() {
         repeat(currentLevel + 1) {
             areaBuilder.addAtEmptyPosition(Rat(), Position3D.defaultPosition(), areaBuilder.size)
         }
+        // Add ORCS
+        // Add some orcs to each level, starting with level 2
+//        repeat(currentLevel) {
+//            areaBuilder.addAtEmptyPosition(Orc(), Position3D.defaultPosition(), areaBuilder.size)
+//        }
+
         // We add fog of war such that exploration is needed
 //        areaBuilder.addEntity(FogOfWar(), Position3D.unknown())
 
